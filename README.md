@@ -1,7 +1,7 @@
-# <p align="center"> <img src="https://bisu.edu.ph/wp-content/themes/gwt-wordpress-gwt-wordpress-26.0.0/images/bisu-logo2.png" alt="University Logo" width="150"/> <br> BISU Scopus Parser </p>
+# <p align="center">Scopus Parser </p>
 
 ### 🔬 Overview
-The **BISU Scopus Parser** is a high-performance Python tool designed for researchers to filter, map, and rank academic journals. It bridges the gap between the raw **Scopus Source List** and **SCImago Journal Rankings (SJR)**, providing a clean, color-coded Excel report with human-readable subject areas and quartile rankings.
+The **Scopus Parser** is a high-performance Python tool designed for researchers to filter, map, and rank academic journals. It bridges the gap between the raw **Scopus Source List** and **SCImago Journal Rankings (SJR)**, providing a clean, color-coded Excel report with human-readable subject areas and quartile rankings.
 
 ---
 
