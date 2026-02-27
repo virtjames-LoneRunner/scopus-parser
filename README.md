@@ -1,7 +1,7 @@
 # <p align="center">Scopus Parser </p>
 
 ### 🔬 Overview
-The **Scopus Parser** is a high-performance Python tool designed for researchers to filter, map, and rank academic journals. It bridges the gap between the raw **Scopus Source List** and **SCImago Journal Rankings (SJR)**, providing a clean, color-coded Excel report with human-readable subject areas and quartile rankings.
+The **Scopus Parser** is a Python tool designed for researchers to filter, map, and rank academic journals. It bridges the gap between the raw **Scopus Source List** and **SCImago Journal Rankings (SJR)**, providing a clean, color-coded Excel report with human-readable subject areas and quartile rankings.
 
 ---
 
@@ -18,7 +18,7 @@ The **Scopus Parser** is a high-performance Python tool designed for researchers
 
 ## 📂 Data Setup (Required Files)
 
-To use this tool, you must place two specific files in the project directory:
+To use this tool, you must place two specific files in the `scopus` folder:
 
 ### 1. Scopus Source List (`.xlsx`)
 * **Source**: Visit the [Scopus Source Page](https://www.scopus.com/sources).
@@ -29,6 +29,11 @@ To use this tool, you must place two specific files in the project directory:
 * **Source**: Visit [SCImago Journal Rank](https://www.scimagojr.com/journalrank.php).
 * **How to get it**: Click the **"Download data"** button.
 * **Requirement**: Ensure you download the **CSV** format. The script uses the `Sourceid` column to match rankings.
+
+---
+
+## 📊 Sample Output
+![Sample Output File](sample/sample1.png)
 
 ---
 

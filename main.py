@@ -1,8 +1,8 @@
 import os
 import argparse
 
-from bisu_scopus_client.scopus import BISUScopus
-from bisu_scopus_client.config import BISUScopusConfig
+from scopus_parser.scopus import BISUScopus
+from scopus_parser.config import BISUScopusConfig
 
 def main():
     parser = argparse.ArgumentParser(description="Welcome to the BISU Scopus API Client!")

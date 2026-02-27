@@ -2,7 +2,7 @@ import requests
 import pandas
 import re
 
-from bisu_scopus_client.config import BISUScopusConfig
+from scopus_parser.config import BISUScopusConfig
 
 
 class BISUScopus():
