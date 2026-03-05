@@ -7,6 +7,7 @@ from scopus_parser.config import BISUScopusConfig
 def main():
     parser = argparse.ArgumentParser(description="Welcome to the BISU Scopus API Client!")
     parser.add_argument("--keywords", nargs="+", help="Keywords to search for.")
+    parser.add_argument("--language", nargs="+", help="Article Language in Source (Three-Letter ISO Language Codes) to search for. (ENG for English)")
     parser.add_argument("--source_types", nargs="+", help="Filter by Source Type: (Journal/Book Series/Trade Journal/etc.)")
     parser.add_argument("--active_status", nargs="+", help="Filter by Activity: (Active/Inactive)")
     parser.add_argument("--output_filename", type=str, help="Output filename (must end in .xlsx)")
@@ -42,6 +43,8 @@ def main():
             bisu_scopus.filter_by_column("Source Type", args.source_types)
         if args.active_status:
             bisu_scopus.filter_by_column("Active or Inactive", args.active_status)
+        if args.language:
+            bisu_scopus.filter_by_column("Article Language in Source (Three-Letter ISO Language Codes)", args.language)
 
         # Apply the mapping
         field_descriptions = bisu_scopus.filtered['All Science Journal Classification Codes (ASJC)'].apply(bisu_scopus.map_multiple_codes)

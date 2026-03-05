@@ -97,6 +97,10 @@ class BISUScopus():
             how='left'
         )
         
+        # Format this column properly because the SCIMago file has the format "0,001" 
+        merged['SJR'] = merged['SJR'].str.replace(',', '').str.lstrip('0')
+
+        
         # 4. Cleanup: Remove the redundant 'Sourceid' column after merge
         if 'Sourceid' in merged.columns:
             merged = merged.drop(columns=['Sourceid'])
@@ -171,7 +175,7 @@ class BISUScopus():
         # Add newlines to the Categories string
         if 'Categories' in self.filtered.columns:
             self.filtered['Categories'] = self.filtered['Categories'].astype(str).str.replace('; ', ';\n')
-
+        
         # Use XlsxWriter to format the sheet
         with pandas.ExcelWriter(filename, engine='xlsxwriter') as writer:
             self.filtered.to_excel(writer, index=False, sheet_name='Rankings')
@@ -197,6 +201,13 @@ class BISUScopus():
                 
                 # Apply wrapping to everything for a clean look, set width
                 worksheet.set_column(i, i, max_len, wrap_top)
+                
+                if col == "Source Title":
+                    bold_format = workbook.add_format({'bold': True})
+                    worksheet.conditional_format(1, i, len(self.filtered), i, {
+                        'type':     'no_blanks',
+                        'format':   bold_format
+                    })
 
             # Apply Conditional Formatting to 'SJR Best Quartile' column
             if 'SJR Best Quartile' in self.filtered.columns:

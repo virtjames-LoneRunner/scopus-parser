@@ -63,7 +63,7 @@ pip install -r requirements.txt
 Run the client via the command line using the following arguments:
 
 ```bash
-python main.py --keywords "Heritage Conservation" "Science" --source_types Journal --active_status Active --output_filename Results.xlsx
+python main.py --keywords "Heritage Conservation" "Science" --source_types Journal --active_status Active --language ENG --output_filename Results.xlsx
 ```
 
 ### Argument Reference
@@ -73,6 +73,7 @@ python main.py --keywords "Heritage Conservation" "Science" --source_types Journ
 | `--keywords` | List of terms to search for. Supports multiple keywords and regex. | `--keywords "Heritage" "Conservation"` |
 | `--source_types` | Filter by the type of publication (Journal, Book Series, etc.). | `--source_types Journal` |
 | `--active_status` | Filter journals by their current status (Active or Inactive). | `--active_status Active` |
+| `--language`| List of Three-Letter ISO Language Codes to search for. | `--language ENG` |
 | `--output_filename`| The name of the generated Excel report. Must end in `.xlsx`. | `--output_filename results.xlsx` |
 
 ---
