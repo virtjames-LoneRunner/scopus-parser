@@ -6,11 +6,11 @@ from scopus_parser.config import BISUScopusConfig
 
 def main():
     parser = argparse.ArgumentParser(description="Welcome to the BISU Scopus API Client!")
-    parser.add_argument("--keywords", nargs="+", help="Keywords to search for.")
+    parser.add_argument("--keywords", nargs="+", help="Keywords to search for.", required=True)
     parser.add_argument("--language", nargs="+", help="Article Language in Source (Three-Letter ISO Language Codes) to search for. (ENG for English)")
     parser.add_argument("--source_types", nargs="+", help="Filter by Source Type: (Journal/Book Series/Trade Journal/etc.)")
     parser.add_argument("--active_status", nargs="+", help="Filter by Activity: (Active/Inactive)")
-    parser.add_argument("--output_filename", type=str, help="Output filename (must end in .xlsx)")
+    parser.add_argument("--output_filename", type=str, help="Default: scopus_api_filtered_results.xlsx")
     args = parser.parse_args()
 
     config = BISUScopusConfig()
