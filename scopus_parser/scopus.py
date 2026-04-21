@@ -116,6 +116,7 @@ class BISUScopus():
             'Source Title', 
             'Categories', 
             'Areas', 
+            'Source Type',
             'H index'
             'All Science Journal Classification Codes (ASJC)',
             'Field Descriptions',

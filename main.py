@@ -10,6 +10,7 @@ def main():
     parser.add_argument("--language", nargs="+", help="Article Language in Source (Three-Letter ISO Language Codes) to search for. (ENG for English)")
     parser.add_argument("--source_types", nargs="+", help="Filter by Source Type: (Journal/Book Series/Trade Journal/etc.)")
     parser.add_argument("--active_status", nargs="+", help="Filter by Activity: (Active/Inactive)")
+    parser.add_argument("--scimago_list_file", type=str, help="Default: scimagojr 2025.csv")
     parser.add_argument("--output_filename", type=str, help="Default: scopus_api_filtered_results.xlsx")
     args = parser.parse_args()
 
@@ -51,7 +52,10 @@ def main():
         # Insert at a specific index (Index 1 for the 2nd column)
         bisu_scopus.filtered.insert(1, 'Field Descriptions', field_descriptions)
         
-        bisu_scopus.add_scimago_rankings(os.path.join("scopus", "scimagojr 2024.csv"))
+        scimago_list_file = "scimagojr 2025.csv"
+        if args.scimago_list_file:
+            scimago_list_file = args.scimago_list_file
+        bisu_scopus.add_scimago_rankings(os.path.join("scopus", scimago_list_file))
         bisu_scopus.clean_up_columns()
         
         # Export data to excel file
