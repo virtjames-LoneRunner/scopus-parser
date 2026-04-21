@@ -24,11 +24,13 @@ To use this tool, you must place two specific files in the `scopus` folder:
 * **Source**: Visit the [Scopus Source Page](https://www.scopus.com/sources).
 * **How to get it**: Click on **"Download Scopus Source List"**.
 * **Requirement**: This script expects the ASJC code mapping to be present in the last sheet of the workbook.
+* **Requirement**: The file must be in the `scopus` folder.
 
 ### 2. SCImago Journal Rank (`.csv`)
 * **Source**: Visit [SCImago Journal Rank](https://www.scimagojr.com/journalrank.php).
 * **How to get it**: Click the **"Download data"** button.
 * **Requirement**: Ensure you download the **CSV** format. The script uses the `Sourceid` column to match rankings.
+* **Requirement**: The file must be in the `scopus` folder.
 
 ---
 
@@ -63,7 +65,7 @@ pip install -r requirements.txt
 Run the client via the command line using the following arguments:
 
 ```bash
-python main.py --keywords "Heritage Conservation" "Science" --source_types Journal --active_status Active --language ENG --output_filename Results.xlsx
+python main.py --keywords "Heritage Conservation" "Science" --source_types Journal --active_status Active --language ENG --scimago_list_file "scimagojr 2025.csv" --output_filename Results.xlsx
 ```
 
 ### Argument Reference
@@ -74,6 +76,7 @@ python main.py --keywords "Heritage Conservation" "Science" --source_types Journ
 | `--source_types` | Filter by the type of publication (Journal, Book Series, etc.). | `--source_types Journal` |
 | `--active_status` | Filter journals by their current status (Active or Inactive). | `--active_status Active` |
 | `--language`| List of Three-Letter ISO Language Codes to search for. | `--language ENG` |
+| `--scimago_list_file`| The name of the scimago list file you want in the scopus folder (2024, 2025 or later). Must end in `.csv`. | `--scimago_list_file "scimagojr 2025.csv"` |
 | `--output_filename`| The name of the generated Excel report. Must end in `.xlsx`. | `--output_filename results.xlsx` |
 
 ---
