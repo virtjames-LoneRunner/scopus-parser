@@ -10,6 +10,7 @@ class BISUScopus():
     list_filename = ""
     list_file = None
     list_file_sheet_names = []
+    columns_to_keep = []
     
     data_list_sources = None
     data_asjc = None
@@ -18,6 +19,7 @@ class BISUScopus():
     def __init__(self, config: BISUScopusConfig):
         self.list_link = config.list_link
         self.list_filename = config.list_filename
+        self.columns_to_keep = config.columns_to_keep
         return
     
     def retrieve_list(self):
@@ -101,7 +103,7 @@ class BISUScopus():
         merged['SJR'] = merged['SJR'].str.replace(',', '').str.lstrip('0')
 
         
-        # 4. Cleanup: Remove the redundant 'Sourceid' column after merge
+        # Cleanup: Remove the redundant 'Sourceid' column after merge
         if 'Sourceid' in merged.columns:
             merged = merged.drop(columns=['Sourceid'])
 
@@ -109,28 +111,7 @@ class BISUScopus():
         print("Rankings added successfully.")
 
     def clean_up_columns(self):
-        columns_to_keep = [
-            'Sourcerecord ID',
-            'SJR', 
-            'SJR Best Quartile', 
-            'Source Title', 
-            'Categories', 
-            'Areas', 
-            'Source Type',
-            'H index'
-            'All Science Journal Classification Codes (ASJC)',
-            'Field Descriptions',
-            'ISSN', 
-            'EISSN', 
-            'Active or Inactive',
-            'Coverage',
-            'Title Discontinued by Scopus',
-            'Article Language in Source (Three-Letter ISO Language Codes)',
-            'Open Access Status',
-            'Publisher',
-        ]
-        existing_cols = [c for c in columns_to_keep if c in self.filtered.columns]
-        
+        existing_cols = [c for c in self.columns_to_keep if c in self.filtered.columns]
         self.filtered = self.filtered[existing_cols]
 
     def print_filter_summary(self):
@@ -164,7 +145,7 @@ class BISUScopus():
                 # Set the column width
                 worksheet.set_column(i, i, column_len)
                 
-            # Optional: Add a simple filter to the top row
+            # Add a simple filter to the top row
             worksheet.autofilter(0, 0, len(self.filtered), len(self.filtered.columns) - 1)
 
         print(f"File saved and formatted: {filename}")
