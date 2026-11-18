@@ -77,7 +77,37 @@ python main.py --keywords "Heritage Conservation" "Science" --source_types Journ
 | `--active_status` | Filter journals by their current status (Active or Inactive). | `--active_status Active` |
 | `--language`| List of Three-Letter ISO Language Codes to search for. | `--language ENG` |
 | `--scimago_list_file`| The name of the scimago list file you want in the scopus folder (2024, 2025 or later). Must end in `.csv`. | `--scimago_list_file "scimagojr 2025.csv"` |
-| `--output_filename`| The name of the generated Excel report. Must end in `.xlsx`. | `--output_filename results.xlsx` |
+| `--output_filename`| The name of the generated Excel report. | `--output_filename results` |
+
+### Publication-shortlisting filters
+
+```bash
+python main.py \
+  --keywords agriculture rural \
+  --search_fields title categories areas field_descriptions \
+  --match_mode any \
+  --source_types Journal \
+  --active_status Active \
+  --exclude_discontinued \
+  --quartiles Q1 Q2 \
+  --min_h_index 20 \
+  --sort_by h_index \
+  --output_filename shortlist.xlsx
+```
+
+Additional filters:
+
+| Argument | Description |
+| :--- | :--- |
+| `--search_fields` | Search title, categories, areas, ASJC codes, mapped field descriptions, or publisher. |
+| `--match_mode any/all` | Match at least one keyword or require every keyword. |
+| `--categories` | Filter by one or more SCImago categories. |
+| `--areas` | Filter by one or more SCImago subject areas. |
+| `--quartiles` | Keep one or more SJR quartiles. |
+| `--min_sjr` | Require a minimum SJR. |
+| `--min_h_index` | Require a minimum H-index. |
+| `--exclude_discontinued` | Exclude titles marked discontinued by Scopus. |
+| `--sort_by sjr/h_index` | Rank the final Excel shortlist. |
 
 ---
 

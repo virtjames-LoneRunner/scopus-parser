@@ -1,42 +1,36 @@
 import requests
 import pandas
-import re
+import os
 
 from scopus_parser.config import BISUScopusConfig
 
 
 class BISUScopus():
-    list_link = ""
-    list_filename = ""
-    list_file = None
-    list_file_sheet_names = []
-    columns_to_keep = []
-    
-    data_list_sources = None
-    data_asjc = None
-    filtered = None
-
     def __init__(self, config: BISUScopusConfig):
         self.list_link = config.list_link
         self.list_filename = config.list_filename
         self.columns_to_keep = config.columns_to_keep
-        return
+        self.list_file = None
+        self.list_file_sheet_names = []
+        self.data_list_sources = None
+        self.data_asjc = None
+        self.filtered = None
     
     def retrieve_list(self):
         if (self.list_link == ""):
             print("Please provide the link")
             return False
-        response = requests.get(self.list_link) 
-
-        if response.status_code == 200:
+        os.makedirs(os.path.dirname(self.list_filename) or ".", exist_ok=True)
+        try:
+            response = requests.get(self.list_link, timeout=60)
+            response.raise_for_status()
             with open(self.list_filename, 'wb') as f:
                 f.write(response.content)
-                print(f"Successfully written to {self.list_filename}.")
-                return True
-        else:
-            print("There was an error while downloading the scopus list file.")
-
-        return False
+            print(f"Successfully written to {self.list_filename}.")
+            return True
+        except requests.RequestException as exc:
+            print(f"There was an error while downloading the Scopus list: {exc}")
+            return False
 
     def load_file(self):
         print("Loading list file....")
@@ -47,7 +41,11 @@ class BISUScopus():
         print("Reading scopus sources from list....")
         self.data_list_sources = pandas.read_excel(self.list_filename)
 
-        df = pandas.read_excel(self.list_file, self.list_file_sheet_names[-1])
+        mapping_sheet = next(
+            (name for name in self.list_file_sheet_names if "ASJC" in name.upper()),
+            self.list_file_sheet_names[-1],
+        )
+        df = pandas.read_excel(self.list_file, mapping_sheet)
         mapping_df = df.dropna(subset=df.columns[:2], how='any')
 
         # Clean up: Ensure the 'Code' column is numeric and Descriptions are strings
@@ -58,18 +56,92 @@ class BISUScopus():
 
         # Final Clean Table (Only first two columns)
         asjc_lookup_table = mapping_df[['Code', 'Description']].reset_index(drop=True)
-        self.data_asjc = dict(zip(asjc_lookup_table['Code'], asjc_lookup_table['Description']))
+        self.data_asjc = {
+            int(code): description
+            for code, description in zip(asjc_lookup_table['Code'], asjc_lookup_table['Description'])
+            if pandas.notna(code)
+        }
 
-    def filter_by_column(self, column, keywords = []):
-        # Add \b to ensure we only match whole words
-        pattern = '|'.join([fr'\b{re.escape(word)}\b' for word in keywords])
+    def filter_by_column(self, column, keywords=None):
+        """Backward-compatible substring filter for a single column."""
+        return self.filter_by_values(column, keywords or [])
 
-        if self.filtered is None:
-            self.filtered = self.data_list_sources[self.data_list_sources[column].str.contains(pattern, case=False, na=False)]
-        else:
-            self.filtered = self.filtered[self.filtered[column].str.contains(pattern, case=False, na=False)]
-        
-        #return self.filtered
+    def filter_by_values(self, column, values):
+        """Keep rows containing any selected value in a column."""
+        if not values:
+            return
+        if column not in (self.filtered if self.filtered is not None else self.data_list_sources).columns:
+            raise KeyError(f"Unknown filter column: {column}")
+
+        target = self.filtered if self.filtered is not None else self.data_list_sources
+        wanted = [str(value).strip().casefold() for value in values if str(value).strip()]
+
+        def matches(value):
+            if pandas.isna(value):
+                return False
+            text = str(value).casefold()
+            return any(wanted_value in text for wanted_value in wanted)
+
+        mask = target[column].apply(matches)
+        self.filtered = target.loc[mask].copy()
+
+    def filter_by_keywords(self, columns, keywords, match_mode="any"):
+        """Search case-insensitive keyword substrings across one or more columns."""
+        if not keywords:
+            return
+        wanted = [str(keyword).strip().casefold() for keyword in keywords if str(keyword).strip()]
+        if not wanted:
+            return
+        target = self.filtered if self.filtered is not None else self.data_list_sources
+
+        missing = [column for column in columns if column not in target.columns]
+        if missing:
+            raise KeyError(f"Unknown search column(s): {', '.join(missing)}")
+
+        def row_matches(row):
+            matches = []
+            for keyword in wanted:
+                keyword_matches = any(
+                    not pandas.isna(row[column])
+                    and keyword in str(row[column]).casefold()
+                    for column in columns
+                )
+                matches.append(keyword_matches)
+            return all(matches) if match_mode == "all" else any(matches)
+
+        mask = target.apply(row_matches, axis=1)
+        self.filtered = target.loc[mask].copy()
+
+    def filter_by_minimum(self, column, minimum):
+        if minimum is None:
+            return
+        target = self.filtered if self.filtered is not None else self.data_list_sources
+        if column not in target.columns:
+            raise KeyError(f"Unknown ranking column: {column}")
+        numeric = pandas.to_numeric(target[column], errors="coerce")
+        self.filtered = target.loc[numeric >= minimum].copy()
+
+    def exclude_discontinued(self):
+        target = self.filtered if self.filtered is not None else self.data_list_sources
+        column = "Titles Discontinued by Scopus"
+        if column not in target.columns:
+            raise KeyError(f"Unknown discontinued-title column: {column}")
+        self.filtered = target.loc[target[column].isna()].copy()
+
+    def sort_shortlist(self, sort_by="sjr"):
+        target = self.filtered if self.filtered is not None else self.data_list_sources
+        column = "SJR" if sort_by == "sjr" else "H index"
+        if column not in target.columns:
+            raise KeyError(f"Unknown sort column: {column}")
+        numeric = pandas.to_numeric(target[column], errors="coerce")
+        sorted_target = target.assign(**{f"__{column}": numeric}).sort_values(
+            f"__{column}",
+            ascending=False,
+            na_position="last",
+            kind="stable",
+        )
+        sorted_target = sorted_target.drop(columns=[f"__{column}"])
+        self.filtered = sorted_target
     
     def map_multiple_codes(self, val):
         if pandas.isna(val):
@@ -85,12 +157,17 @@ class BISUScopus():
         """Merges SCImago rankings into the filtered results."""
         print("Merging SCImago ranking data...")
         
-        sjr_df = pandas.read_csv(scimago_csv_path, sep=';')
+        sjr_df = pandas.read_csv(scimago_csv_path, sep=';', encoding='utf-8-sig')
 
         sjr_subset = sjr_df[['Sourceid', 'SJR', 'SJR Best Quartile', 'Categories', 'Areas', 'H index']]
+        sjr_subset = sjr_subset.drop_duplicates(subset=['Sourceid'], keep='first')
         # Merge with current results
         # Use 'left' join so it doesn't lose Scopus journals that aren't yet in SCImago
         target_df = self.filtered if self.filtered is not None else self.data_list_sources
+        ranking_columns = ['SJR', 'SJR Best Quartile', 'Categories', 'Areas', 'H index']
+        target_df = target_df.drop(
+            columns=[column for column in ranking_columns if column in target_df.columns]
+        )
         
         merged = target_df.merge(
             sjr_subset, 
@@ -99,10 +176,11 @@ class BISUScopus():
             how='left'
         )
         
-        # Format this column properly because the SCIMago file has the format "0,001" 
-        merged['SJR'] = merged['SJR'].str.replace(',', '').str.lstrip('0')
-
-        
+        # SCImago uses commas as decimal separators in CSV values.
+        merged['SJR'] = pandas.to_numeric(
+            merged['SJR'].astype('string').str.replace(',', '.', regex=False),
+            errors='coerce',
+        )
         # Cleanup: Remove the redundant 'Sourceid' column after merge
         if 'Sourceid' in merged.columns:
             merged = merged.drop(columns=['Sourceid'])
@@ -179,7 +257,10 @@ class BISUScopus():
             for i, col in enumerate(self.filtered.columns):
                 # Measure longest line in the column
                 max_len = self.filtered[col].astype(str).apply(lambda x: max(len(line) for line in str(x).split('\n'))).max()
-                max_len = max(max_len, len(col)) + 3
+                if pandas.isna(max_len):
+                    max_len = len(col) + 3
+                else:
+                    max_len = max(max_len, len(col)) + 3
                 
                 # Apply wrapping to everything for a clean look, set width
                 worksheet.set_column(i, i, max_len, wrap_top)
